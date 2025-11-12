@@ -510,11 +510,16 @@ def _add_blb(brt: RpgBin, blb: RpgBin, hkd: RpgBin, params: dict) -> None:
                 )
             )
 
+            # Take azimuth angle from zenith measurements after the BLB scan
             brt_ind = np.where(
-                (brt.data["time"] > time_blb - 3600)
-                & (brt.data["time"] < time_blb + 3600)
+                (brt.data["time"] > time_blb) & (brt.data["time"] < time_blb + 600)
             )[0]
-            brt_azi = ma.median(brt.data["azimuth_angle"][brt_ind])
+            brt_azi = (
+                np.nan
+                if len(brt_ind) == 0
+                or (np.diff(brt.data["azimuth_angle"][brt_ind]) > 3.0).all()
+                else ma.median(brt.data["azimuth_angle"][brt_ind])
+            )
             azimuth_angle_add = np.concatenate(
                 (
                     azimuth_angle_add,

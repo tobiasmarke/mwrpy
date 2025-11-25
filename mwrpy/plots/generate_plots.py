@@ -1746,7 +1746,7 @@ def _plot_scan(
         fig.subplots_adjust(hspace=0.09)
         case_date = _read_date(nc_file)
         axt, ax1 = 0, 0
-        data_g = None
+        var_pl = None
         for ind in range(len(angles)):
             ele_range = (angles[ind] - 1.0, angles[ind] + 1.0)
             elevation_f = _elevation_filter(nc_file, elevation, ele_range=ele_range)
@@ -1768,12 +1768,15 @@ def _plot_scan(
                 if ax1 == 0:
                     ax1 = ind
                 scan = pd.DataFrame({"time": time_s0, "azimuth": azi_f, "var": data_s0})
-                az_pl = np.unique(azi_f)
-                az_pl = az_pl[np.mod(az_pl - az_pl[0], 5) == 0]
-                if np.diff(az_pl).all() > 0:
-                    scan["blocks"] = (scan["azimuth"].diff() <= 0.0).cumsum()
+                if np.nanmedian(np.diff(azi_f.data)) > 0.0:
+                    az_pl = np.unique(azi_f.data)
                 else:
-                    scan["blocks"] = (scan["azimuth"].diff() >= 0.0).cumsum()
+                    indices = np.unique(azi_f, return_index=True)[1]
+                    az_pl = azi_f[np.sort(indices)]
+                az_pl = az_pl[np.mod(az_pl - az_pl[0], 5) == 0]
+                if az_pl[0] == 0.0 and az_pl[1] > 300.0:
+                    az_pl[0] = 360.0
+                scan["blocks"] = (scan["time"].diff() > 0.01).cumsum()
                 scan = scan[
                     scan.groupby(scan["blocks"]).transform("size") == len(az_pl)
                 ]
@@ -1876,7 +1879,7 @@ def _plot_scan(
                         colorbar.set_label("scan deviation (" + clab + ")", fontsize=13)
                         axi[ip].yaxis.set_tick_params(labelbottom=False)
 
-        if data_g is None:
+        if var_pl is None:
             ax.set_title("empty")
         else:
             axp = axs[axt, :] if len(angles) > 1 else axs

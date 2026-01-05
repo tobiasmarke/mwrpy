@@ -36,7 +36,7 @@ def find_liquid(
         2-D boolean array denoting liquid layers.
 
     References:
-        The method is based on Tuononen, M. et.al, 2019,
+        The method is based on Tuononen, M. et al., 2019,
         https://acp.copernicus.org/articles/19/1985/2019/.
 
     """
@@ -49,7 +49,7 @@ def find_liquid(
             is_high_std,
             peak_alt > min_alt,
         )
-        return all(conditions)
+        return is_high_std50 | all(conditions)
 
     time = obs["time"]
     height = obs["height"]
@@ -77,6 +77,7 @@ def find_liquid(
         peak_alt = height[peak] - height[0]
         top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
         is_high_std = tb_std[n] >= tb_th
+        is_high_std50 = tb_std[n] >= tb_th * 1.5
         if _is_proper_peak():
             is_liquid[n] = 1
 
@@ -122,12 +123,12 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
 
         The 1st order difference is now
 
-        >>> dx = np.diff(mx).filled(0)
+        >>> dx = np.ma.diff(mx).filled(0)
             [0.5, 0.5, 0, 0, 4, -3]
 
         From the original profile we see that the peak index is 5.
         Let's assume our base can't be more than 4 elements below
-        peak and the threshold value is 2. Thus we call
+        peak and the threshold value is 2. Thus, we call
 
         >>> ind_base(dx, 5, 4, 2)
             4

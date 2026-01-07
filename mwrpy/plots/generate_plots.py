@@ -238,7 +238,7 @@ def _mark_gaps(
         mask_new = np.insert(mask_new, ind_gap, temp_mask, axis=0)
         time_new = np.insert(time_new, ind_gap, max_x - time_delta)
         time_new = np.insert(time_new, ind_gap, time[-1] + time_delta)
-    data_new.mask = mask_new
+    data_new[mask_new] = ma.masked
     return time_new, data_new
 
 
